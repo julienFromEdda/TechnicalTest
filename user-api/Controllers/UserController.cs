@@ -27,11 +27,13 @@ public class UserController(UserDbContext context) : Controller
         if (request == null)
             return BadRequest("Request parameter is required.");
 
-        var query = context.Users.AsQueryable();
+        var query = context.Users
+            .AsNoTracking()
+            .AsQueryable();
 
         if (!string.IsNullOrEmpty(request.Term))
         {
-            query = query.Where(item => item.Name.Contains(request.Term) || item.FirstName.Contains(request.Term));
+            query = query.Where(item => item.Name.Contains(request.Term, StringComparison.InvariantCultureIgnoreCase) || item.FirstName.Contains(request.Term, StringComparison.InvariantCultureIgnoreCase));
         }
 
         var result = new UserResult
@@ -39,7 +41,7 @@ public class UserController(UserDbContext context) : Controller
              TotalCount = await query.CountAsync(),
              Results = await query.ToListAsync()
         };
-
+        
         return Ok(result);
     }
 }
